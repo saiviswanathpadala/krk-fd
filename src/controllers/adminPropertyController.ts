@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { db } from '../config/database';
 import { properties } from '../models/property';
 import { propertyPendingChanges } from '../models/propertyPendingChange';
+import { propertyEmployeeAssignments } from '../models/propertyAssignment';
 import { desc, eq, and, or, ilike, sql } from 'drizzle-orm';
 import { auditService } from '../services/auditService';
 
@@ -175,6 +176,9 @@ export const deleteAdminProperty = async (req: AuthRequest, res: Response) => {
   try {
     const { id } = req.params;
     const adminId = parseInt(req.user!.userId);
+    
+    await db.delete(propertyEmployeeAssignments)
+      .where(eq(propertyEmployeeAssignments.propertyId, id));
     
     await db
       .update(properties)
