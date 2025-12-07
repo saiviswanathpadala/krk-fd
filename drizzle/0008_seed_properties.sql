@@ -1,0 +1,35 @@
+-- Seed properties data
+INSERT INTO "properties" ("id", "title", "location", "images", "gallery", "description", "features", "amenities", "brochure", "map", "website", "type", "created_at", "updated_at") VALUES
+('5587eadf-be2f-41b7-9c65-608fe39cc698', 'Maruthi Green Fields', 'Maruthi Green Fields,11-85/163, Shadnagar, Telangana 509216', 
+'["https://www.maruthicorp.com/uploads/projects/1704362338_Elavation.jpg","https://www.maruthicorp.com/uploads/projects/1704362492_Villa.png"]'::jsonb,
+'["https://www.maruthicorp.com/uploads/projects/1705287251_1.jpg","https://www.maruthicorp.com/uploads/projects/1705287215_WhatsApp%20Image%202024-01-15%20at%2008.17.50_2237330b.jpg","https://www.maruthicorp.com/uploads/projects/1705287103_WhatsApp%20Image%202024-01-15%20at%2008.17.52_c64da996.jpg","https://www.maruthicorp.com/uploads/projects/1704362374_Roads.png","https://www.maruthicorp.com/uploads/projects/1704362307_Gate.jpeg","https://www.maruthicorp.com/uploads/projects/1705287119_WhatsApp%20Image%202024-01-15%20at%2008.17.53_2b067eb7.jpg"]'::jsonb,
+'Maruthi Green Fields, an idyllic villa project situated in the tranquil landscapes of Shadnagar, Hyderabad. Spanning 50 acres, our project offers 1000 Sq.Yds plots with residences ranging from 4,700 to 8,500 Sq.Fts, each boasting a luxurious 5 BHK layout. Crafted by renowned architects, our meticulous planning ensures privacy, natural light, and ventilation in every villa. Enjoy a host of amenities, including a clubhouse, swimming pool, landscaped gardens, sports facilities, children''s play area, and 24/7 security. Our commitment extends to providing value-added services like housekeeping,gardening, and maintenance for a hassle-free living experience.',
+'["5 BHK","6000 Sq.fts","Ongoing"]'::jsonb,
+'["40'' & 30'' CC Roads","100% Vaastu Compliant","24/7 Multi-Level Security System","Lush Green Landscape & Open Park","Jogging & Cycling Tracks","Rain Water Harvesting Pits"]'::jsonb,
+'https://www.maruthicorp.com/uploads/projects/1704360942_Green%20Fields%20Brochure%203.pdf',
+'https://maps.app.goo.gl/BGjQkjzgDQAzQFrB6',
+'https://www.maruthicorp.com/MGF',
+'New Listing', '2025-10-17T04:07:30.746Z', '2025-10-17T04:07:30.746Z'),
+
+('a1b2c3d4-e5f6-47a8-b9c0-d1e2f3a4b5c6', 'Maruthi Spring Fields', 'Maruthi Spring Field County, Sy.No. 8, 10 & 13, Annaram, Shadnagar, Telangana 509202',
+'["https://www.maruthicorp.com/uploads/projects/1704377068_Untitled-design-29-768x601.png"]'::jsonb,
+'["https://www.maruthicorp.com/uploads/projects/1705286803_WhatsApp%20Image%202024-01-15%20at%2008.09.04_616eae38.jpg","https://www.maruthicorp.com/uploads/projects/1705286779_WhatsApp%20Image%202024-01-15%20at%2008.09.05_2126c453.jpg","https://www.maruthicorp.com/uploads/projects/1704376946_Untitled-design-22-1.png","https://www.maruthicorp.com/uploads/projects/1704376837_Untitled-design-3.png","https://www.maruthicorp.com/uploads/projects/1704376695_Untitled-design-10%20(1).png","https://www.maruthicorp.com/uploads/projects/1705286711_WhatsApp%20Image%202024-01-15%20at%2008.09.03_2a4dea3e.jpg"]'::jsonb,
+'Maruthi Spring Fields, Targets affordability without compromising on quality. This project offers 3 BHK villas along with 200 square yards plots. These villas are designed to be both comfortable and cost-effective, making them perfect for first-time homebuyers or those looking for a budget-friendly yet comfortable living solution. The community layout emphasizes open spaces, community living, and essential amenities, all set within a secure and well-maintained environment.',
+'["3 BHK","2500 Sq.Ft","Ongoing"]'::jsonb,
+'["40'' & 30'' CC Roads","100% Vaastu Compliant","Clubhouse with Swimming Pool","Park Development with Compound Wall","Grand Entrance Arch with CC Cameras & Security Cabin","Granite Compound Wall"]'::jsonb,
+'https://www.maruthicorp.com/uploads/projects/1704266258_Spring%20Fields%20Leaflet%204%201.pdf',
+'https://maps.app.goo.gl/NFhjJLDnYzXC9AWc6',
+'https://www.maruthicorp.com/MSF',
+'New Listing', '2025-10-17T04:07:30.746Z', '2025-10-17T04:07:30.746Z'),
+
+('b2c3d4e5-f6a7-48b9-c0d1-e2f3a4b5c6d7', 'Maruthi Star City', 'Maruthi Star City, 25GP+4G, Chilkamarri, Telangana 509202',
+'["https://www.maruthicorp.com/uploads/projects/1704275290_Maruthi%20star%20city.jpg"]'::jsonb,
+'["https://www.maruthicorp.com/uploads/projects/1704471585_Gate.jpg","https://www.maruthicorp.com/uploads/projects/1704471574_Road%20work-2.jpg","https://www.maruthicorp.com/uploads/projects/1704471530_Road%20Work.jpg","https://www.maruthicorp.com/uploads/projects/1704471504_Compound%20Wall.jpg","https://www.maruthicorp.com/uploads/projects/1704471483_Planing.jpg","https://www.maruthicorp.com/uploads/projects/1704471458_Land%20Area.jpg"]'::jsonb,
+'Maruthi Star City, Another affordable housing option, offering 3 and 4 BHK villas ranging from 1800 to 2500 square feet, along with 200 square yards plots. This project is designed to cater to a diverse range of family sizes and budgets. The villas are thoughtfully designed to maximize space and functionality, ensuring a comfortable living experience. The community features include playgrounds, parks, and recreational areas, making it an ideal choice for families.',
+'["3 BHK , 4 BHK","200 Sq.Yds","Under Construction"]'::jsonb,
+'["40'' & 30'' CC Roads","100% Vaastu Compliant","Clubhouse with Swimming Pool","Transformer, Underground Electricity with Decorative street Lights","Underground Drainage System","STP (Sewage Treatment Plant)"]'::jsonb,
+'https://www.maruthicorp.com/uploads/projects/1704266258_Spring%20Fields%20Leaflet%204%201.pdf',
+'https://maps.app.goo.gl/xw4Dm6QkkYhChsYq5',
+'https://www.maruthicorp.com/msc',
+'New Listing', '2025-10-17T04:07:30.746Z', '2025-10-17T04:07:30.746Z')
+ON CONFLICT (id) DO NOTHING;
