@@ -239,6 +239,7 @@ export const rejectAgent = async (req: AuthRequest, res: Response) => {
           deleted: true,
           deletedAt: new Date(),
           deletedByAdminId: adminId,
+          assignedEmployeeId: null,
         })
         .where(eq(users.id, agentId));
 
@@ -307,6 +308,7 @@ export const deleteAgent = async (req: AuthRequest, res: Response) => {
         deleted: true,
         deletedAt: new Date(),
         deletedByAdminId: adminId,
+        assignedEmployeeId: null,
       })
       .where(eq(users.id, agentId));
 
@@ -362,6 +364,7 @@ export const bulkDeleteAgents = async (req: AuthRequest, res: Response) => {
             deleted: true,
             deletedAt: new Date(),
             deletedByAdminId: adminId,
+            assignedEmployeeId: null,
           })
           .where(eq(users.id, id));
 
