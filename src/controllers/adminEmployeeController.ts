@@ -161,7 +161,10 @@ export const getEmployeeById = async (req: AuthRequest, res: Response) => {
       images: properties.images,
     })
     .from(properties)
-    .where(inArray(properties.id, propertyIds)) : [];
+    .where(and(
+      inArray(properties.id, propertyIds),
+      eq(properties.deleted, false)
+    )) : [];
 
     const assignedAgents = await db.select({
       id: users.id,
@@ -174,6 +177,7 @@ export const getEmployeeById = async (req: AuthRequest, res: Response) => {
     .where(and(
       eq(users.assignedEmployeeId, employeeId),
       ilike(users.role, 'agent'),
+      eq(users.approved, true),
       eq(users.deleted, false)
     ));
 
@@ -530,7 +534,7 @@ export const getPropertiesLookup = async (req: AuthRequest, res: Response) => {
     const { q, limit = '50' } = req.query;
     const limitNum = Math.min(parseInt(limit as string) || 50, 100);
 
-    let whereConditions = [];
+    let whereConditions = [eq(properties.deleted, false)];
 
     if (q) {
       const searchTerm = `%${q}%`;
@@ -549,7 +553,7 @@ export const getPropertiesLookup = async (req: AuthRequest, res: Response) => {
       images: properties.images,
     })
     .from(properties)
-    .where(whereConditions.length > 0 ? and(...whereConditions) : undefined)
+    .where(and(...whereConditions))
     .limit(limitNum);
 
     res.json({ data: results });
