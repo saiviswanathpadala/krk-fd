@@ -1,7 +1,8 @@
 import { Request, Response } from 'express';
 import { db } from '../config/database';
 import { propertyPendingChanges, bannerPendingChanges } from '../models/propertyPendingChange';
-import { propertyAgentAssignments } from '../models/propertyAssignment';
+import { propertyAgentAssignments, propertyEmployeeAssignments } from '../models/propertyAssignment';
+import { properties } from '../models/property';
 import { eq, desc, and, or, sql } from 'drizzle-orm';
 
 interface AuthRequest extends Request {
@@ -84,7 +85,13 @@ export const getEmployeeActivity = async (req: AuthRequest, res: Response) => {
         createdAt: propertyAgentAssignments.assignedAt,
       })
       .from(propertyAgentAssignments)
-      .where(eq(propertyAgentAssignments.assignedByEmployeeId, userId))
+      .innerJoin(properties, eq(propertyAgentAssignments.propertyId, properties.id))
+      .innerJoin(propertyEmployeeAssignments, eq(propertyAgentAssignments.propertyId, propertyEmployeeAssignments.propertyId))
+      .where(and(
+        eq(propertyAgentAssignments.assignedByEmployeeId, userId),
+        eq(properties.deleted, false),
+        eq(propertyEmployeeAssignments.employeeId, userId)
+      ))
       .orderBy(desc(propertyAgentAssignments.assignedAt))
       .limit(limit);
 
