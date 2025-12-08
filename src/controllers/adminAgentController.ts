@@ -2,6 +2,7 @@ import { Request, Response } from 'express';
 import { z } from 'zod';
 import { db } from '../config/database';
 import { users } from '../models/user';
+import { propertyAgentAssignments } from '../models/propertyAssignment';
 import { eq, and, or, ilike, desc, lt } from 'drizzle-orm';
 import { auditService } from '../services/auditService';
 
@@ -234,6 +235,10 @@ export const rejectAgent = async (req: AuthRequest, res: Response) => {
     }
 
     if (action === 'delete') {
+      // Remove all property assignments for this agent
+      await db.delete(propertyAgentAssignments)
+        .where(eq(propertyAgentAssignments.agentId, agentId));
+      
       await db.update(users)
         .set({
           deleted: true,
@@ -303,6 +308,10 @@ export const deleteAgent = async (req: AuthRequest, res: Response) => {
       return res.status(404).json({ message: 'Agent not found' });
     }
 
+    // Remove all property assignments for this agent
+    await db.delete(propertyAgentAssignments)
+      .where(eq(propertyAgentAssignments.agentId, agentId));
+    
     await db.update(users)
       .set({
         deleted: true,
@@ -358,6 +367,10 @@ export const bulkDeleteAgents = async (req: AuthRequest, res: Response) => {
         }
 
         const agent = agentsToDelete.find(a => a.id === id);
+        
+        // Remove all property assignments for this agent
+        await db.delete(propertyAgentAssignments)
+          .where(eq(propertyAgentAssignments.agentId, id));
         
         await db.update(users)
           .set({
