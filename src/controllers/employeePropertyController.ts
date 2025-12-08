@@ -25,7 +25,11 @@ export const getEmployeeProperties = async (req: AuthRequest, res: Response) => 
     
     const assignments = await db.select({ propertyId: propertyEmployeeAssignments.propertyId })
       .from(propertyEmployeeAssignments)
-      .where(eq(propertyEmployeeAssignments.employeeId, employeeId));
+      .innerJoin(properties, eq(propertyEmployeeAssignments.propertyId, properties.id))
+      .where(and(
+        eq(propertyEmployeeAssignments.employeeId, employeeId),
+        eq(properties.deleted, false)
+      ));
     
     const assignedPropertyIds = assignments.map(a => a.propertyId);
     
