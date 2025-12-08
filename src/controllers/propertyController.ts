@@ -2,7 +2,7 @@ import { Request, Response } from 'express';
 import { z } from 'zod';
 import { db } from '../config/database';
 import { properties } from '../models/property';
-import { propertyAgentAssignments } from '../models/propertyAssignment';
+import { propertyAgentAssignments, propertyEmployeeAssignments } from '../models/propertyAssignment';
 import { users } from '../models/user';
 import { desc, lt, eq, and, inArray, sql } from 'drizzle-orm';
 
@@ -28,12 +28,19 @@ export const getProperties = async (req: AuthRequest, res: Response) => {
     // Build where conditions
     let whereConditions = [eq(properties.deleted, false)];
     
-    // If user is an agent, only show properties assigned to them (check junction table)
+    // If user is an agent, only show properties assigned to them AND their employee
     if (userRole === 'agent' && userId) {
       const agentAssignments = await db
         .select({ propertyId: propertyAgentAssignments.propertyId })
         .from(propertyAgentAssignments)
-        .where(eq(propertyAgentAssignments.agentId, userId));
+        .innerJoin(properties, eq(propertyAgentAssignments.propertyId, properties.id))
+        .innerJoin(propertyEmployeeAssignments, eq(propertyAgentAssignments.propertyId, propertyEmployeeAssignments.propertyId))
+        .innerJoin(users, eq(propertyEmployeeAssignments.employeeId, users.id))
+        .where(and(
+          eq(propertyAgentAssignments.agentId, userId),
+          eq(properties.deleted, false),
+          eq(users.deleted, false)
+        ));
       
       const assignedPropertyIds = agentAssignments.map(a => a.propertyId);
       
@@ -97,12 +104,19 @@ export const getPropertyById = async (req: AuthRequest, res: Response) => {
       eq(properties.deleted, false)
     ];
     
-    // If user is an agent, only show properties assigned to them (check junction table)
+    // If user is an agent, only show properties assigned to them AND their employee
     if (userRole === 'agent' && userId) {
       const agentAssignments = await db
         .select({ propertyId: propertyAgentAssignments.propertyId })
         .from(propertyAgentAssignments)
-        .where(eq(propertyAgentAssignments.agentId, userId));
+        .innerJoin(properties, eq(propertyAgentAssignments.propertyId, properties.id))
+        .innerJoin(propertyEmployeeAssignments, eq(propertyAgentAssignments.propertyId, propertyEmployeeAssignments.propertyId))
+        .innerJoin(users, eq(propertyEmployeeAssignments.employeeId, users.id))
+        .where(and(
+          eq(propertyAgentAssignments.agentId, userId),
+          eq(properties.deleted, false),
+          eq(users.deleted, false)
+        ));
       
       const assignedPropertyIds = agentAssignments.map(a => a.propertyId);
       
