@@ -27,11 +27,11 @@ const MAX_OTP_REQUESTS = 500;
 const RATE_LIMIT_WINDOW = 15 * 60 * 1000;
 
 const phoneSchema = z.object({
-  phone: z.string().regex(/^[6-9]\d{9}$/, 'Invalid phone number'),
+  phone: z.string().regex(/^\+[1-9]\d{1,14}$/, 'Invalid phone number'),
 });
 
 const otpSchema = z.object({
-  phone: z.string().regex(/^[6-9]\d{9}$/, 'Invalid phone number'),
+  phone: z.string().regex(/^\+[1-9]\d{1,14}$/, 'Invalid phone number'),
   otp: z.string().length(4, 'OTP must be 4 digits'),
 });
 

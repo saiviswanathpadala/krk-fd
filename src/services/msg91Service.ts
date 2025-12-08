@@ -28,7 +28,9 @@ class MSG91Service {
 
   async sendOTP(phone: string): Promise<{ success: boolean; sessionId?: string; message: string }> {
     try {
-      const url = `${this.baseUrl}/otp?otp_expiry=10&template_id=${this.templateId}&mobile=91${phone}&authkey=${this.authKey}&realTimeResponse=1&otp_length=4`;
+      // Remove '+' from E.164 format (e.g., +919876543210 -> 919876543210)
+      const formattedPhone = phone.replace(/^\+/, '');
+      const url = `${this.baseUrl}/otp?otp_expiry=10&template_id=${this.templateId}&mobile=${formattedPhone}&authkey=${this.authKey}&realTimeResponse=1&otp_length=4`;
       
       const response = await fetch(url, {
         method: 'POST',
@@ -55,7 +57,7 @@ class MSG91Service {
       if (data.type === 'success') {
         return {
           success: true,
-          sessionId: `91${phone}`,
+          sessionId: formattedPhone,
           message: 'OTP sent successfully'
         };
       } else {

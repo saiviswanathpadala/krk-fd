@@ -24,7 +24,7 @@ const listQuerySchema = z.object({
 const createEmployeeSchema = z.object({
   name: z.string().min(1, 'Name is required'),
   email: z.string().email('Valid email is required'),
-  phone: z.string().min(10, 'Valid phone is required'),
+  phone: z.string().regex(/^\+[1-9]\d{1,14}$/, 'Valid phone number is required'),
   department: z.string().min(1, 'Department is required'),
   assignProperties: z.array(z.string()).optional(),
   assignAgents: z.array(z.number()).optional(),
@@ -34,7 +34,7 @@ const createEmployeeSchema = z.object({
 const updateEmployeeSchema = z.object({
   name: z.string().optional(),
   email: z.string().email().optional(),
-  phone: z.string().optional(),
+  phone: z.string().regex(/^\+[1-9]\d{1,14}$/, 'Valid phone number is required').optional(),
   department: z.string().optional(),
   addProperties: z.array(z.string()).optional(),
   removeProperties: z.array(z.string()).optional(),
