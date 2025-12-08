@@ -70,10 +70,16 @@ export const getEmployeeAgents = async (req: AuthRequest, res: Response) => {
     const propertyCounts = agentIds.length > 0 ? await db
       .select({
         agentId: propertyAgentAssignments.agentId,
-        count: count()
+        count: sql<number>`count(DISTINCT ${propertyAgentAssignments.propertyId})`
       })
       .from(propertyAgentAssignments)
-      .where(inArray(propertyAgentAssignments.agentId, agentIds))
+      .innerJoin(properties, eq(propertyAgentAssignments.propertyId, properties.id))
+      .innerJoin(propertyEmployeeAssignments, eq(propertyAgentAssignments.propertyId, propertyEmployeeAssignments.propertyId))
+      .where(and(
+        inArray(propertyAgentAssignments.agentId, agentIds),
+        eq(properties.deleted, false),
+        eq(propertyEmployeeAssignments.employeeId, employeeId)
+      ))
       .groupBy(propertyAgentAssignments.agentId) : [];
     
     const countMap = new Map(propertyCounts.map(c => [c.agentId, c.count]));
@@ -121,9 +127,15 @@ export const getEmployeeAgentById = async (req: AuthRequest, res: Response) => {
     }
     
     const [propertyCount] = await db
-      .select({ count: count() })
+      .select({ count: sql<number>`count(DISTINCT ${propertyAgentAssignments.propertyId})` })
       .from(propertyAgentAssignments)
-      .where(eq(propertyAgentAssignments.agentId, agent.id));
+      .innerJoin(properties, eq(propertyAgentAssignments.propertyId, properties.id))
+      .innerJoin(propertyEmployeeAssignments, eq(propertyAgentAssignments.propertyId, propertyEmployeeAssignments.propertyId))
+      .where(and(
+        eq(propertyAgentAssignments.agentId, agent.id),
+        eq(properties.deleted, false),
+        eq(propertyEmployeeAssignments.employeeId, employeeId)
+      ));
     
     const referredCustomers = await db.select({
       id: users.id,
@@ -182,7 +194,13 @@ export const getAgentAssignedProperties = async (req: AuthRequest, res: Response
     const assignments = await db
       .select({ propertyId: propertyAgentAssignments.propertyId })
       .from(propertyAgentAssignments)
-      .where(eq(propertyAgentAssignments.agentId, parseInt(agentId)));
+      .innerJoin(properties, eq(propertyAgentAssignments.propertyId, properties.id))
+      .innerJoin(propertyEmployeeAssignments, eq(propertyAgentAssignments.propertyId, propertyEmployeeAssignments.propertyId))
+      .where(and(
+        eq(propertyAgentAssignments.agentId, parseInt(agentId)),
+        eq(properties.deleted, false),
+        eq(propertyEmployeeAssignments.employeeId, employeeId)
+      ));
     
     const assignedPropertyIds = assignments.map(a => a.propertyId);
     
@@ -224,7 +242,13 @@ export const assignPropertiesToAgent = async (req: AuthRequest, res: Response) =
       const currentAssignments = await tx
         .select({ propertyId: propertyAgentAssignments.propertyId })
         .from(propertyAgentAssignments)
-        .where(eq(propertyAgentAssignments.agentId, parseInt(agentId)));
+        .innerJoin(properties, eq(propertyAgentAssignments.propertyId, properties.id))
+        .innerJoin(propertyEmployeeAssignments, eq(propertyAgentAssignments.propertyId, propertyEmployeeAssignments.propertyId))
+        .where(and(
+          eq(propertyAgentAssignments.agentId, parseInt(agentId)),
+          eq(properties.deleted, false),
+          eq(propertyEmployeeAssignments.employeeId, employeeId)
+        ));
       
       const currentIds = currentAssignments.map(a => a.propertyId);
       const toAdd = propertyIds.filter(id => !currentIds.includes(id));
