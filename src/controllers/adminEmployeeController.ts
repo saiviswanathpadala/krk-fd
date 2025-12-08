@@ -3,7 +3,7 @@ import { z } from 'zod';
 import { db } from '../config/database';
 import { users } from '../models/user';
 import { properties } from '../models/property';
-import { propertyEmployeeAssignments } from '../models/propertyAssignment';
+import { propertyEmployeeAssignments, propertyAgentAssignments } from '../models/propertyAssignment';
 import { eq, and, or, ilike, desc, lt, sql, inArray } from 'drizzle-orm';
 import { auditService } from '../services/auditService';
 
@@ -90,9 +90,13 @@ export const getEmployees = async (req: AuthRequest, res: Response) => {
     .limit(limit + 1);
 
     const dataWithCounts = await Promise.all(results.map(async (user) => {
-      const [propCount] = await db.select({ count: sql<number>`count(*)::int` })
+      const [propCount] = await db.select({ count: sql<number>`count(DISTINCT ${propertyEmployeeAssignments.propertyId})::int` })
         .from(propertyEmployeeAssignments)
-        .where(eq(propertyEmployeeAssignments.employeeId, user.id));
+        .innerJoin(properties, eq(propertyEmployeeAssignments.propertyId, properties.id))
+        .where(and(
+          eq(propertyEmployeeAssignments.employeeId, user.id),
+          eq(properties.deleted, false)
+        ));
       
       const [agentCount] = await db.select({ count: sql<number>`count(*)::int` })
         .from(users)
@@ -150,7 +154,11 @@ export const getEmployeeById = async (req: AuthRequest, res: Response) => {
       propertyId: propertyEmployeeAssignments.propertyId,
     })
     .from(propertyEmployeeAssignments)
-    .where(eq(propertyEmployeeAssignments.employeeId, employeeId));
+    .innerJoin(properties, eq(propertyEmployeeAssignments.propertyId, properties.id))
+    .where(and(
+      eq(propertyEmployeeAssignments.employeeId, employeeId),
+      eq(properties.deleted, false)
+    ));
 
     const propertyIds = propertyAssignments.map(pa => pa.propertyId);
     
@@ -300,6 +308,27 @@ export const updateEmployee = async (req: AuthRequest, res: Response) => {
     }
 
     if (removeProperties && removeProperties.length > 0) {
+      // Get agents assigned to this employee
+      const employeeAgents = await db.select({ id: users.id })
+        .from(users)
+        .where(and(
+          eq(users.assignedEmployeeId, employeeId),
+          ilike(users.role, 'agent'),
+          eq(users.deleted, false)
+        ));
+      
+      const agentIds = employeeAgents.map(a => a.id);
+      
+      // Remove agent assignments for these properties
+      if (agentIds.length > 0) {
+        await db.delete(propertyAgentAssignments)
+          .where(and(
+            inArray(propertyAgentAssignments.propertyId, removeProperties),
+            inArray(propertyAgentAssignments.agentId, agentIds)
+          ));
+      }
+      
+      // Remove employee assignments
       await db.delete(propertyEmployeeAssignments)
         .where(and(
           inArray(propertyEmployeeAssignments.propertyId, removeProperties),
@@ -393,9 +422,13 @@ export const reassignAndDeleteEmployee = async (req: AuthRequest, res: Response)
       return res.status(404).json({ message: 'Target employee not found' });
     }
 
-    const propertiesCount = await db.select({ count: sql<number>`count(*)` })
+    const propertiesCount = await db.select({ count: sql<number>`count(DISTINCT ${propertyEmployeeAssignments.propertyId})` })
       .from(propertyEmployeeAssignments)
-      .where(eq(propertyEmployeeAssignments.employeeId, employeeId));
+      .innerJoin(properties, eq(propertyEmployeeAssignments.propertyId, properties.id))
+      .where(and(
+        eq(propertyEmployeeAssignments.employeeId, employeeId),
+        eq(properties.deleted, false)
+      ));
 
     const agentsCount = await db.select({ count: sql<number>`count(*)` })
       .from(users)
@@ -407,19 +440,56 @@ export const reassignAndDeleteEmployee = async (req: AuthRequest, res: Response)
 
     const propertiesToReassign = await db.select({ propertyId: propertyEmployeeAssignments.propertyId })
       .from(propertyEmployeeAssignments)
-      .where(eq(propertyEmployeeAssignments.employeeId, employeeId));
+      .innerJoin(properties, eq(propertyEmployeeAssignments.propertyId, properties.id))
+      .where(and(
+        eq(propertyEmployeeAssignments.employeeId, employeeId),
+        eq(properties.deleted, false)
+      ));
 
+    // Get agents assigned to this employee
+    const employeeAgents = await db.select({ id: users.id })
+      .from(users)
+      .where(and(
+        eq(users.assignedEmployeeId, employeeId),
+        ilike(users.role, 'agent'),
+        eq(users.deleted, false)
+      ));
+    
+    const agentIds = employeeAgents.map(a => a.id);
+    
+    // Remove all agent assignments for this employee's properties
+    if (agentIds.length > 0 && propertiesToReassign.length > 0) {
+      const propertyIds = propertiesToReassign.map(p => p.propertyId);
+      await db.delete(propertyAgentAssignments)
+        .where(and(
+          inArray(propertyAgentAssignments.propertyId, propertyIds),
+          inArray(propertyAgentAssignments.agentId, agentIds)
+        ));
+    }
+    
+    // Get target employee's existing property assignments
+    const targetEmployeeProperties = await db.select({ propertyId: propertyEmployeeAssignments.propertyId })
+      .from(propertyEmployeeAssignments)
+      .where(eq(propertyEmployeeAssignments.employeeId, targetEmployeeId));
+    
+    const targetPropertyIds = targetEmployeeProperties.map(p => p.propertyId);
+    
+    // Filter out properties that target employee already has
+    const uniquePropertiesToReassign = propertiesToReassign.filter(
+      p => !targetPropertyIds.includes(p.propertyId)
+    );
+    
     await db.delete(propertyEmployeeAssignments)
       .where(eq(propertyEmployeeAssignments.employeeId, employeeId));
 
-    if (propertiesToReassign.length > 0) {
+    if (uniquePropertiesToReassign.length > 0) {
       await db.insert(propertyEmployeeAssignments).values(
-        propertiesToReassign.map(p => ({
+        uniquePropertiesToReassign.map(p => ({
           propertyId: p.propertyId,
           employeeId: targetEmployeeId,
           assignedByAdminId: adminId,
         }))
-      ).onConflictDoNothing();
+      );
     }
 
     await db.update(users)
@@ -442,7 +512,8 @@ export const reassignAndDeleteEmployee = async (req: AuthRequest, res: Response)
       {
         employeeName: employee[0].name,
         targetEmployeeName: targetEmployee[0].name,
-        propertiesReassigned: propertiesCount[0].count,
+        propertiesReassigned: uniquePropertiesToReassign.length,
+        propertiesSkipped: propertiesToReassign.length - uniquePropertiesToReassign.length,
         agentsReassigned: agentsCount[0].count,
       }
     );
@@ -450,7 +521,8 @@ export const reassignAndDeleteEmployee = async (req: AuthRequest, res: Response)
     res.json({
       success: true,
       reassigned: {
-        properties: propertiesCount[0].count,
+        properties: uniquePropertiesToReassign.length,
+        propertiesSkipped: propertiesToReassign.length - uniquePropertiesToReassign.length,
         agents: agentsCount[0].count,
       },
     });
@@ -486,9 +558,13 @@ export const deleteEmployee = async (req: AuthRequest, res: Response) => {
       return res.status(404).json({ message: 'Employee not found' });
     }
 
-    const propertiesCount = await db.select({ count: sql<number>`count(*)` })
+    const propertiesCount = await db.select({ count: sql<number>`count(DISTINCT ${propertyEmployeeAssignments.propertyId})` })
       .from(propertyEmployeeAssignments)
-      .where(eq(propertyEmployeeAssignments.employeeId, employeeId));
+      .innerJoin(properties, eq(propertyEmployeeAssignments.propertyId, properties.id))
+      .where(and(
+        eq(propertyEmployeeAssignments.employeeId, employeeId),
+        eq(properties.deleted, false)
+      ));
 
     const agentsCount = await db.select({ count: sql<number>`count(*)` })
       .from(users)
