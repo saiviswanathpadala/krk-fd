@@ -165,7 +165,7 @@ export const getEmployeeAgentById = async (req: AuthRequest, res: Response) => {
 };
 
 const assignPropertiesSchema = z.object({
-  propertyIds: z.array(z.string()).min(1).max(100),
+  propertyIds: z.array(z.string()).max(100),
   note: z.string().optional(),
 });
 
