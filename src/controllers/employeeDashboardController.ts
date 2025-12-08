@@ -5,7 +5,7 @@ import { propertyPendingChanges, bannerPendingChanges } from '../models/property
 import { banners } from '../models/banner';
 import { users } from '../models/user';
 import { propertyEmployeeAssignments } from '../models/propertyAssignment';
-import { eq, and, count, or } from 'drizzle-orm';
+import { eq, and, count, or, sql } from 'drizzle-orm';
 import { emitPendingChangeUpdate, emitAssignmentUpdate } from '../services/socketService';
 
 interface AuthRequest extends Request {
@@ -21,9 +21,13 @@ export const getEmployeeDashboardStats = async (req: AuthRequest, res: Response)
 
     // Properties stats
     const [propertiesTotal] = await db
-      .select({ count: count() })
+      .select({ count: sql<number>`count(DISTINCT ${propertyEmployeeAssignments.propertyId})` })
       .from(propertyEmployeeAssignments)
-      .where(eq(propertyEmployeeAssignments.employeeId, employeeId));
+      .innerJoin(properties, eq(propertyEmployeeAssignments.propertyId, properties.id))
+      .where(and(
+        eq(propertyEmployeeAssignments.employeeId, employeeId),
+        eq(properties.deleted, false)
+      ));
 
     const [propertiesUnderReview] = await db
       .select({ count: count() })
