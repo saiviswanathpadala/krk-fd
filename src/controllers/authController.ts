@@ -223,7 +223,7 @@ export const verifyOTP = async (req: Request, res: Response) => {
         deleted: user[0].deleted
       },
       process.env.JWT_SECRET!,
-      { expiresIn: '7d' }
+      { expiresIn: '30d' }
     );
 
     // Log admin/employee login
