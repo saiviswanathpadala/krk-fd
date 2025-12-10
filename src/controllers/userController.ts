@@ -195,3 +195,36 @@ export const getAdmins = async (req: AuthRequest, res: Response) => {
     res.status(500).json({ message: 'Failed to fetch admins' });
   }
 };
+
+export const deleteAccount = async (req: AuthRequest, res: Response) => {
+  try {
+    const userId = req.user?.userId;
+    
+    const user = await db.select({ role: users.role })
+      .from(users)
+      .where(eq(users.id, parseInt(userId!)))
+      .limit(1);
+    
+    if (user.length === 0) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+    
+    if (user[0].role !== 'agent' && user[0].role !== 'customer') {
+      return res.status(403).json({ message: 'Only agents and customers can delete their accounts' });
+    }
+    
+    await db.update(users)
+      .set({ 
+        deleted: true, 
+        deletedAt: new Date(),
+        active: false,
+        updatedAt: new Date()
+      })
+      .where(eq(users.id, parseInt(userId!)));
+    
+    res.json({ message: 'Account deleted successfully' });
+  } catch (error) {
+    console.error('Error deleting account:', error);
+    res.status(500).json({ message: 'Failed to delete account' });
+  }
+};
